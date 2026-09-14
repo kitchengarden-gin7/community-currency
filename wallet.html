@@ -65,6 +65,11 @@
             margin-top: 10px;
         }
         .btn:hover { background-color: #1a82cb; }
+        .btn-admin {
+            background-color: #5cb85c;
+            margin-top: 10px;
+        }
+        .btn-admin:hover { background-color: #4cae4c; }
         .btn-danger {
             background-color: #d9534f;
             margin-top: 15px;
@@ -85,7 +90,7 @@
 <body>
 
 <div class="container">
-    <h2>地域通貨ウェブウォレット</h2>
+    <h2 id="wallet-title">地域通貨ウェブウォレット</h2>
     
     <div class="card">
         <strong>あなたのNanoアドレス（公開用）：</strong>
@@ -100,24 +105,28 @@
 
     <div class="card">
         <strong>残高：</strong>
-        <p id="wallet-balance" style="font-size: 18px; font-weight: bold; margin: 5px 0 0 0;">0.00 YENA (NANO)</p>
+        <p id="wallet-balance" style="font-size: 18px; font-weight: bold; margin: 5px 0 0 0;">0.00 通貨</p>
     </div>
 
+    <a href="admin.html" class="btn btn-admin">⚙️ 管理者設定へ移動</a>
     <button class="btn btn-danger" onclick="createNewWallet()">新しいお財布を作り直す</button>
     <a href="index.html" class="btn btn-back">トップページに戻る</a>
 </div>
 
 <script>
-    // ハードウェア乱数による真のシード生成
+    // 通貨単位の取得・適用
+    const currencySymbol = localStorage.getItem('yena_currency_symbol') || 'YENA';
+    document.getElementById('wallet-title').innerText = `${currencySymbol} ウェブウォレット`;
+
+    // 端末のハードウェア乱数による真のシード生成
     function generateRealSeedHex() {
         const array = new Uint8Array(32);
         window.crypto.getRandomValues(array);
         return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
     }
 
-    // Nanoアドレスの数学的導出
+    // 正当なNanoアドレス変換エンジン
     function seedToRealNanoAddress(seedHex) {
-        const encoder = new TextEncoder();
         let bytes = new Uint8Array(32);
         for(let i=0; i<32; i++) {
             bytes[i] = parseInt(seedHex.substr(i*2, 2), 16);
@@ -173,22 +182,17 @@
         }
     }
 
-    // 複数ノード候補（どれか1つが生きていれば繋がる仕組み）
-    const nodeEndpoints = [
-        "https://nano.pocketnode.xyz/proxy",
-        "https://node.nanochat.cc/proxy",
-        "https://rainstorm.city/api"
-    ];
-
     async function fetchBalance(address) {
         const balanceElem = document.getElementById('wallet-balance');
         balanceElem.innerText = "残高を確認中...";
+
+        const customNode = localStorage.getItem('yena_node_url') || "https://nano.pocketnode.xyz/proxy";
+        const nodeEndpoints = [customNode, "https://nano.pocketnode.xyz/proxy", "https://node.nanochat.cc/proxy"];
 
         let success = false;
 
         for (const url of nodeEndpoints) {
             try {
-                // 各ノードへの接続に3秒のタイムアウト制限を設けて固まるのを防ぐ
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 3000);
 
@@ -211,24 +215,22 @@
                     const integerPart = rawBalance / divisor;
                     const fractionalPart = (rawBalance % divisor).toString().padStart(30, '0').substring(0, 4);
                     
-                    balanceElem.innerText = `${integerPart}.${fractionalPart} YENA`;
+                    balanceElem.innerText = `${integerPart}.${fractionalPart} ${currencySymbol}`;
                     success = true;
-                    break; // 無事取得できたらループ終了
+                    break;
                 }
             } catch (err) {
-                // このノードがダメなら次のノードへ試行を続ける
                 console.warn("ノード接続失敗、次へ試行します:", url);
             }
         }
 
-        // すべてのノードが応答しなかった場合でも、エラーで止めずに0円として安全に表示
         if (!success) {
-            balanceElem.innerText = "0.00 YENA (ネットワーク接続オフライン/未開設)";
+            balanceElem.innerText = `0.00 ${currencySymbol} (オフラインまたは未開設)`;
         }
     }
 
     function createNewWallet() {
-        if (confirm("⚠️警告：本当に新しくお財布を作り直しますか？古いシードは消去されます。")) {
+        if (confirm(`⚠️警告：本当に新しくお財布を作り直しますか？古いシードは消去されます。`)) {
             try {
                 localStorage.removeItem('yena_real_seed_hex');
             } catch (e) {}
