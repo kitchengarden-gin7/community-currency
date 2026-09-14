@@ -114,18 +114,15 @@
 </div>
 
 <script>
-    // 通貨単位の取得・適用
     const currencySymbol = localStorage.getItem('yena_currency_symbol') || 'YENA';
     document.getElementById('wallet-title').innerText = `${currencySymbol} ウェブウォレット`;
 
-    // 端末のハードウェア乱数による真のシード生成
     function generateRealSeedHex() {
         const array = new Uint8Array(32);
         window.crypto.getRandomValues(array);
         return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
     }
 
-    // 正当なNanoアドレス変換エンジン
     function seedToRealNanoAddress(seedHex) {
         let bytes = new Uint8Array(32);
         for(let i=0; i<32; i++) {
@@ -184,17 +181,23 @@
 
     async function fetchBalance(address) {
         const balanceElem = document.getElementById('wallet-balance');
-        balanceElem.innerText = "残高を確認中...";
+        balanceElem.innerText = "ブロックチェーンと通信中...";
 
-        const customNode = localStorage.getItem('yena_node_url') || "https://nano.pocketnode.xyz/proxy";
-        const nodeEndpoints = [customNode, "https://nano.pocketnode.xyz/proxy", "https://node.nanochat.cc/proxy"];
+        // 複数の生き残っている信頼性の高いパブリックプロキシ候補
+        const customNode = localStorage.getItem('yena_node_url');
+        const nodeEndpoints = [
+            customNode,
+            "https://api.nano.kga.earth/node/proxy",
+            "https://nanoslo.0x.no/proxy",
+            "https://nano.pocketnode.xyz/proxy"
+        ].filter(Boolean);
 
         let success = false;
 
         for (const url of nodeEndpoints) {
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const timeoutId = setTimeout(() => controller.abort(), 4000); // 4秒で次のノードへフォールバック
 
                 const response = await fetch(url, {
                     method: 'POST',
@@ -206,6 +209,8 @@
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
+
+                if (!response.ok) continue;
 
                 const data = await response.json();
                 
@@ -220,12 +225,12 @@
                     break;
                 }
             } catch (err) {
-                console.warn("ノード接続失敗、次へ試行します:", url);
+                console.warn("ノード接続切替:", url);
             }
         }
 
         if (!success) {
-            balanceElem.innerText = `0.00 ${currencySymbol} (オフラインまたは未開設)`;
+            balanceElem.innerText = `0.00 ${currencySymbol} (新規アドレス / ノード接続待機中)`;
         }
     }
 
