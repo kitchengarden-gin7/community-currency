@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地域通貨ウェブウォレット</title>
+    <!-- Nano公式の計算用軽量ライブラリ -->
+    <script src="https://cdn.jsdelivr.net/npm/nanocurrency@3.0.0/dist/nanocurrency.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 550px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h2 { color: #209cee; text-align: center; margin-top: 0; }
+        .card {
+            background: #f8f9fa;
+            border: 1px solid #e1e4e8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+        .address-box {
+            font-family: monospace;
+            font-size: 13px;
+            color: #007acc;
+            background: #eef7fc;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 5px;
+        }
+        .seed-box {
+            font-family: monospace;
+            font-size: 13px;
+            color: #c93b2b;
+            background: #fdf2f2;
+            padding: 10px;
+            border-radius: 6px;
+            line-height: 1.6;
+            margin-top: 5px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #209cee;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            box-sizing: border-box;
+            margin-top: 10px;
+        }
+        .btn:hover { background-color: #1a82cb; }
+        .btn-danger {
+            background-color: #d9534f;
+            margin-top: 15px;
+        }
+        .btn-danger:hover { background-color: #c9302c; }
+        .btn-back {
+            background-color: #6c757d;
+            margin-top: 10px;
+        }
+        .btn-back:hover { background-color: #5a6268; }
+        .warning {
+            color: #d9534f;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>地域通貨ウェブウォレット</h2>
+    
+    <div class="card">
+        <strong>あなたのNanoアドレス（公開用）：</strong>
+        <div id="wallet-address" class="address-box">読み込み中...</div>
+    </div>
+
+    <div class="card">
+        <strong>秘密のシード（バックアップキー）：</strong>
+        <div id="wallet-seed" class="seed-box">読み込み中...</div>
+        <p class="warning">⚠️ このシードはあなたのお財布の鍵です。絶対に他人に教えず、必ず紙に書き留めて大切に保管してください。</p>
+    </div>
+
+    <div class="card">
+        <strong>残高：</strong>
+        <p id="wallet-balance" style="font-size: 18px; font-weight: bold; margin: 5px 0 0 0;">0.00 YENA (NANO)</p>
+    </div>
+
+    <button class="btn btn-danger" onclick="createNewWallet()">新しいお財布を作り直す</button>
+    <a href="index.html" class="btn btn-back">トップページに戻る</a>
+</div>
+
+<script>
+    let memorySeed = "";
+
+    function generateSeedHex() {
+        let hex = "";
+        const chars = "0123456789abcdef";
+        for (let i = 0; i < 64; i++) {
+            hex += chars[Math.floor(Math.random() * 16)];
+        }
+        return hex;
+    }
+
+    function initWallet() {
+        let seedHex = "";
+
+        try {
+            seedHex = localStorage.getItem('yena_wallet_seed_hex');
+        } catch (e) {
+            console.warn("localStorage制限環境です");
+        }
+
+        if (!seedHex) {
+            seedHex = generateSeedHex();
+            try {
+                localStorage.setItem('yena_wallet_seed_hex', seedHex);
+            } catch (e) {
+                memorySeed = seedHex;
+            }
+        }
+
+        loadWallet(seedHex);
+    }
+
+    function loadWallet(seedHex) {
+        try {
+            const secretKey = nanocurrency.deriveSecretKey(seedHex, 0);
+            const publicKey = nanocurrency.derivePublicKey(secretKey);
+            const address = nanocurrency.deriveAddress(publicKey);
+
+            document.getElementById('wallet-seed').innerText = seedHex;
+            document.getElementById('wallet-address').innerText = address;
+
+            fetchBalance(address);
+
+        } catch (e) {
+            console.error(e);
+            alert("ウォレットの読み込み中にエラーが発生しました。");
+        }
+    }
+
+    async function fetchBalance(address) {
+        const balanceElem = document.getElementById('wallet-balance');
+        balanceElem.innerText = "残高を確認中...";
+
+        try {
+            const response = await fetch('https://nano.pocketnode.xyz/proxy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'account_balance',
+                    account: address
+                })
+            });
+            const data = await response.json();
+            
+            if (data && data.balance) {
+                const rawBalance = BigInt(data.balance);
+                const divisor = BigInt("1000000000000000000000000000000");
+                const integerPart = rawBalance / divisor;
+                const fractionalPart = (rawBalance % divisor).toString().padStart(30, '0').substring(0, 4);
+                
+                balanceElem.innerText = `${integerPart}.${fractionalPart} YENA`;
+            } else {
+                balanceElem.innerText = "0.00 YENA (未開設のアドレスです)";
+            }
+        } catch (e) {
+            console.error(e);
+            balanceElem.innerText = "0.00 YENA (未開設またはオフライン)";
+        }
+    }
+
+    function createNewWallet() {
+        if (confirm("⚠️警告：本当に新しくお財布を作り直しますか？")) {
+            try {
+                localStorage.removeItem('yena_wallet_seed_hex');
+            } catch (e) {}
+            initWallet();
+            alert("新しいお財布を作成しました！");
+        }
+    }
+
+    window.onload = initWallet;
+</script>
+
+</body>
+</html>
