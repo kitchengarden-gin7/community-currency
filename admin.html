@@ -28,6 +28,21 @@
             border-radius: 8px;
             margin-bottom: 15px;
         }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
         .btn {
             display: block;
             width: 100%;
@@ -50,6 +65,13 @@
             margin-top: 20px;
         }
         .btn-back:hover { background-color: #5a6268; }
+        .msg {
+            color: #28a745;
+            font-size: 13px;
+            margin-top: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -58,13 +80,46 @@
     <h2>管理者設定画面</h2>
     
     <div class="card">
-        <strong>システム管理メニュー</strong>
-        <p>ここでは地域通貨の発行やノード設定などを行います（準備中）。</p>
+        <label for="currency-name">通貨単位（シンボル）の設定</label>
+        <input type="text" id="currency-name" value="YENA" placeholder="例: YENA, 〇〇コイン">
+        
+        <label for="node-url">接続先ノード（RPC Proxy）</label>
+        <input type="text" id="node-url" value="https://nano.pocketnode.xyz/proxy" placeholder="https://...">
+
+        <button class="btn" onclick="saveSettings()">設定を保存する</button>
+        <div id="save-msg" class="msg"></div>
     </div>
 
-    <a href="wallet.html" class="btn">ウォレットを開く</a>
+    <a href="wallet.html" class="btn" style="background-color: #209cee;">ウォレットを開く</a>
     <a href="index.html" class="btn btn-back">トップページに戻る</a>
 </div>
+
+<script>
+    function loadSettings() {
+        const savedCurrency = localStorage.getItem('yena_currency_symbol');
+        if (savedCurrency) {
+            document.getElementById('currency-name').value = savedCurrency;
+        }
+        const savedNode = localStorage.getItem('yena_node_url');
+        if (savedNode) {
+            document.getElementById('node-url').value = savedNode;
+        }
+    }
+
+    function saveSettings() {
+        const currency = document.getElementById('currency-name').value.trim() || "YENA";
+        const node = document.getElementById('node-url').value.trim() || "https://nano.pocketnode.xyz/proxy";
+
+        localStorage.setItem('yena_currency_symbol', currency);
+        localStorage.setItem('yena_node_url', node);
+
+        const msg = document.getElementById('save-msg');
+        msg.innerText = "✅ 設定を正常に保存しました！";
+        setTimeout(() => { msg.innerText = ""; }, 3000);
+    }
+
+    window.onload = loadSettings;
+</script>
 
 </body>
 </html>
