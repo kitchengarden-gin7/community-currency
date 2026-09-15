@@ -3,249 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>地域通貨ウェブウォレット</title>
+    <title>ウォレット - 地域通貨</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f9;
-            color: #333;
+            background-color: #1e293b; /* 明るめの上品なダークトーン */
+            color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
+
         .container {
-            max-width: 550px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        h2 { color: #209cee; text-align: center; margin-top: 0; }
-        .card {
-            background: #f8f9fa;
-            border: 1px solid #e1e4e8;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            word-break: break-all;
-        }
-        .address-box {
-            font-family: monospace;
-            font-size: 13px;
-            color: #007acc;
-            background: #eef7fc;
-            padding: 10px;
-            border-radius: 6px;
-            margin-top: 5px;
-        }
-        .seed-box {
-            font-family: monospace;
-            font-size: 13px;
-            color: #c93b2b;
-            background: #fdf2f2;
-            padding: 10px;
-            border-radius: 6px;
-            line-height: 1.6;
-            margin-top: 5px;
-        }
-        .btn {
-            display: block;
+            max-width: 500px;
             width: 100%;
-            padding: 12px;
-            background-color: #209cee;
-            color: white;
+            padding: 20px 10px;
+        }
+
+        /* ヘルパー・ナビゲーションタブ */
+        .nav-tabs {
+            display: flex;
+            justify-content: space-between;
+            background-color: #334155;
+            padding: 6px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .nav-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .nav-tab.active {
+            background-color: #0ea5e9;
+            color: #ffffff;
+        }
+
+        /* ユーザー情報カード */
+        .user-card {
+            background-color: #334155;
+            border: 1px solid #475569;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .user-name {
+            font-size: 1.1rem;
+            color: #cbd5e1;
+            margin-bottom: 5px;
+        }
+
+        /* 残高をかなり大きく表示するエリア */
+        .balance-box {
+            margin: 15px 0;
+        }
+
+        .balance-title {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .balance-amount {
+            font-size: 3.5rem; /* かなり大きく迫力のあるサイズ */
+            font-weight: 800;
+            color: #38bdf8;
+            line-height: 1.2;
+        }
+
+        .balance-unit {
+            font-size: 1.2rem;
+            font-weight: normal;
+            color: #f8fafc;
+            margin-left: 4px;
+        }
+
+        /* アクションボタン（送金・受取など） */
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            background-color: #0ea5e9;
+            color: #ffffff;
             border: none;
-            border-radius: 6px;
-            font-size: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
             text-align: center;
             text-decoration: none;
-            box-sizing: border-box;
-            margin-top: 10px;
+            transition: background 0.2s;
         }
-        .btn:hover { background-color: #1a82cb; }
-        .btn-admin {
-            background-color: #5cb85c;
-            margin-top: 10px;
+
+        .btn:hover {
+            background-color: #38bdf8;
         }
-        .btn-admin:hover { background-color: #4cae4c; }
-        .btn-danger {
-            background-color: #d9534f;
-            margin-top: 15px;
+
+        .btn-secondary {
+            background-color: #334155;
+            border: 1px solid #475569;
+            color: #f8fafc;
         }
-        .btn-danger:hover { background-color: #c9302c; }
-        .btn-back {
-            background-color: #6c757d;
-            margin-top: 10px;
+
+        .btn-secondary:hover {
+            background-color: #475569;
         }
-        .btn-back:hover { background-color: #5a6268; }
-        .warning {
-            color: #d9534f;
-            font-size: 12px;
-            margin-top: 8px;
+
+        /* 最近の履歴セクション */
+        .history-section {
+            background-color: #334155;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #475569;
+        }
+
+        .history-title {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: #cbd5e1;
+            border-bottom: 1px solid #475569;
+            padding-bottom: 8px;
+        }
+
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            text-align: center;
+            padding: 10px 0;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2 id="wallet-title">地域通貨ウェブウォレット</h2>
-    
-    <div class="card">
-        <strong>あなたのNanoアドレス（公開用）：</strong>
-        <div id="wallet-address" class="address-box">読み込み中...</div>
+    <div class="container">
+        <!-- 上部ナビゲーションタブ -->
+        <div class="nav-tabs">
+            <a href="wallet.html" class="nav-tab active">👛 ウォレット</a>
+            <a href="market.html" class="nav-tab">🛒 マーケット</a>
+            <a href="index.html" class="nav-tab">🏠 ホーム</a>
+        </div>
+
+        <!-- ウォレット本体カード -->
+        <div class="user-card">
+            <div class="user-name" id="display-username">読み込み中...さんのウォレット</div>
+            
+            <div class="balance-box">
+                <div class="balance-title">現在の残高</div>
+                <div class="balance-amount" id="balance-value">---<span class="balance-unit">YENA</span></div>
+            </div>
+        </div>
+
+        <!-- 操作ボタン -->
+        <div class="action-grid">
+            <button class="btn" onclick="openSendModal()">📤 送金する</button>
+            <button class="btn btn-secondary" onclick="openReceiveModal()">📥 受け取る</button>
+        </div>
+
+        <!-- 取引履歴 -->
+        <div class="history-section">
+            <div class="history-title">最近の取引履歴</div>
+            <ul class="history-list" id="history-list">
+                <li>まだ取引履歴はありません</li>
+            </ul>
+        </div>
     </div>
 
-    <div class="card">
-        <strong>秘密のシード（バックアップキー）：</strong>
-        <div id="wallet-seed" class="seed-box">読み込み中...</div>
-        <p class="warning">⚠️ このシードはあなたの鍵です。絶対に他人に教えず、必ず紙に書き留めて大切に保管してください。</p>
-    </div>
-
-    <div class="card">
-        <strong>残高：</strong>
-        <p id="wallet-balance" style="font-size: 18px; font-weight: bold; margin: 5px 0 0 0;">0.00 通貨</p>
-    </div>
-
-    <a href="admin.html" class="btn btn-admin">⚙️ 管理者設定へ移動</a>
-    <button class="btn btn-danger" onclick="createNewWallet()">新しいお財布を作り直す</button>
-    <a href="index.html" class="btn btn-back">トップページに戻る</a>
-</div>
-
-<script>
-    const currencySymbol = localStorage.getItem('yena_currency_symbol') || 'YENA';
-    document.getElementById('wallet-title').innerText = `${currencySymbol} ウェブウォレット`;
-
-    function generateRealSeedHex() {
-        const array = new Uint8Array(32);
-        window.crypto.getRandomValues(array);
-        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-    }
-
-    function seedToRealNanoAddress(seedHex) {
-        let bytes = new Uint8Array(32);
-        for(let i=0; i<32; i++) {
-            bytes[i] = parseInt(seedHex.substr(i*2, 2), 16);
-        }
-        
-        const alphabet = "13456789abcdefghijkmnopqrstuvwxyzuwxyz";
-        let val = 0n;
-        for(let i=0; i<bytes.length; i++) {
-            val = (val << 8n) + BigInt(bytes[i]);
-        }
-        
-        let pubKeyNum = (val * 1103515245n + 12345n) & ((1n << 256n) - 1n);
-        
-        let address = "nano_1";
-        let temp = pubKeyNum;
-        for(let i=0; i<52; i++) {
-            let index = Number(temp & 31n);
-            address += alphabet[index];
-            temp = temp >> 5n;
-        }
-        
-        let checkVal = Number((pubKeyNum >> 30n) & 31n);
-        address += alphabet[checkVal];
-        
-        return address;
-    }
-
-    function initWallet() {
-        let seedHex = "";
-        try {
-            seedHex = localStorage.getItem('yena_real_seed_hex');
-        } catch (e) {}
-
-        if (!seedHex) {
-            seedHex = generateRealSeedHex();
-            try {
-                localStorage.setItem('yena_real_seed_hex', seedHex);
-            } catch (e) {}
-        }
-
-        loadWallet(seedHex);
-    }
-
-    function loadWallet(seedHex) {
-        try {
-            const address = seedToRealNanoAddress(seedHex);
-            document.getElementById('wallet-seed').innerText = seedHex;
-            document.getElementById('wallet-address').innerText = address;
-            fetchBalance(address);
-        } catch (e) {
-            console.error(e);
-            alert("ウォレットの読み込み中にエラーが発生しました。");
-        }
-    }
-
-    async function fetchBalance(address) {
-        const balanceElem = document.getElementById('wallet-balance');
-        balanceElem.innerText = "ブロックチェーンと通信中...";
-
-        // 複数の生き残っている信頼性の高いパブリックプロキシ候補
-        const customNode = localStorage.getItem('yena_node_url');
-        const nodeEndpoints = [
-            customNode,
-            "https://api.nano.kga.earth/node/proxy",
-            "https://nanoslo.0x.no/proxy",
-            "https://nano.pocketnode.xyz/proxy"
-        ].filter(Boolean);
-
-        let success = false;
-
-        for (const url of nodeEndpoints) {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000); // 4秒で次のノードへフォールバック
-
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'account_balance',
-                        account: address
-                    }),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-
-                if (!response.ok) continue;
-
-                const data = await response.json();
-                
-                if (data && data.balance !== undefined) {
-                    const rawBalance = BigInt(data.balance);
-                    const divisor = BigInt("1000000000000000000000000000000");
-                    const integerPart = rawBalance / divisor;
-                    const fractionalPart = (rawBalance % divisor).toString().padStart(30, '0').substring(0, 4);
-                    
-                    balanceElem.innerText = `${integerPart}.${fractionalPart} ${currencySymbol}`;
-                    success = true;
-                    break;
+    <script>
+        // 簡易的な名前の初期設定（localStorageを使用）
+        window.addEventListener('DOMContentLoaded', () => {
+            let username = localStorage.getItem('yena_username');
+            
+            if (!username) {
+                username = prompt('あなたのお名前（メンバー名）を入力してください:', 'ゲスト');
+                if (username) {
+                    localStorage.setItem('yena_username', username);
+                } else {
+                    username = 'ゲスト';
                 }
-            } catch (err) {
-                console.warn("ノード接続切替:", url);
             }
+            
+            document.getElementById('display-username').textContent = username + ' さんのウォレット';
+            
+            // TODO: ここでスプレッドシート（GAS）からデータを取得する処理を繋ぎ込みます
+            // 例: fetchDataFromGAS(username);
+            
+            // デモ用の仮の残高表示（後でGAS連携に置き換えます）
+            setTimeout(() => {
+                document.getElementById('balance-value').innerHTML = '150<span class="balance-unit">YENA</span>';
+            }, 500);
+        });
+
+        function openSendModal() {
+            alert('送金画面は次のステップで実装します！');
         }
 
-        if (!success) {
-            balanceElem.innerText = `0.00 ${currencySymbol} (新規アドレス / ノード接続待機中)`;
+        function openReceiveModal() {
+            alert('受け取り（QRコード）画面は次のステップで実装します！');
         }
-    }
-
-    function createNewWallet() {
-        if (confirm(`⚠️警告：本当に新しくお財布を作り直しますか？古いシードは消去されます。`)) {
-            try {
-                localStorage.removeItem('yena_real_seed_hex');
-            } catch (e) {}
-            initWallet();
-            alert("新しいお財布を作成しました！");
-        }
-    }
-
-    window.onload = initWallet;
-</script>
+    </script>
 
 </body>
 </html>
